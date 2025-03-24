@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muzzle Pattern Matching</title>
+
+    <!-- Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 40px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .preview-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        .alert {
+            display: none;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .preloader-wrapper {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h4 class="center-align blue-text">Muzzle Pattern Matching</h4>
+
+    <form id="uploadForm" class="col s12">
+        <div class="file-field input-field">
+            <div class="btn blue">
+                <span>Upload Animal 1</span>
+                <input type="file" name="image1" id="image1Input" required>
+            </div>
+            <div class="file-path-wrapper">
+                <input class="file-path validate" type="text" placeholder="Choose an image">
+            </div>
+        </div>
+
+        <div class="file-field input-field">
+            <div class="btn blue">
+                <span>Upload Animal 2</span>
+                <input type="file" name="image2" id="image2Input" required>
+            </div>
+            <div class="file-path-wrapper">
+                <input class="file-path validate" type="text" placeholder="Choose an image">
+            </div>
+        </div>
+
+        <button type="submit" class="btn waves-effect waves-light blue w-100">Upload & Compare</button>
+        <button type="button" id="resetForm" class="btn waves-effect waves-light red w-100">Reset</button>
+    </form>
+
+    <!-- Loading Spinner -->
+    <div class="center-align">
+        <div class="preloader-wrapper big active">
+            <div class="spinner-layer spinner-blue-only">
+                <div class="circle-clipper left">
+                    <div class="circle"></div>
+                </div>
+                <div class="gap-patch">
+                    <div class="circle"></div>
+                </div>
+                <div class="circle-clipper right">
+                    <div class="circle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultSection" style="display: none;">
+        <h5 class="center-align grey-text text-darken-2">Results</h5>
+
+        <div class="row">
+            <div class="col s6 center-align">
+                <h6>Original Image 1</h6>
+                <img id="original1" class="preview-img">
+            </div>
+            <div class="col s6 center-align">
+                <h6>Original Image 2</h6>
+                <img id="original2" class="preview-img">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col s6 center-align">
+                <h6>Extracted Muzzle 1</h6>
+                <img id="muzzle1" class="preview-img">
+            </div>
+            <div class="col s6 center-align">
+                <h6>Extracted Muzzle 2</h6>
+                <img id="muzzle2" class="preview-img">
+            </div>
+        </div>
+
+        <div class="center-align">
+            <h6>Matching Key Points</h6>
+            <img id="matched" class="preview-img">
+        </div>
+
+        <div id="matchPercentageContainer" class="center-align">
+            <h5>Matching Percentage:</h5>
+            <div class="alert center-align" id="matchPercentage"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Materialize JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#uploadForm').submit(function(event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+
+            // Show loader
+            $('.preloader-wrapper').show();
+            $('#resultSection').hide();
+
+            $.ajax({
+                url: '/upload',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    $('.preloader-wrapper').hide();
+                    $('#resultSection').show();
+
+                    $('#original1').attr('src', response.original1);
+                    $('#original2').attr('src', response.original2);
+                    $('#muzzle1').attr('src', response.muzzle1);
+                    $('#muzzle2').attr('src', response.muzzle2);
+                    $('#matched').attr('src', response.matched);
+                    
+                    let percentage = parseFloat(response.match_percentage.replace('%', ''));
+                    let alertClass = percentage > 70 ? 'green lighten-4' : (percentage > 40 ? 'yellow lighten-4' : 'red lighten-4');
+                    
+                    $('#matchPercentage').text(response.match_percentage).removeClass().addClass('alert ' + alertClass).show();
+                },
+                error: function(xhr) {
+                    $('.preloader-wrapper').hide();
+                    M.toast({html: xhr.responseJSON.error, classes: 'red'});
+                }
+            });
+        });
+      
+        $('#resetForm').click(function() {
+            $('#uploadForm')[0].reset();
+            $('.file-path').val('');
+            $('#resultSection').hide();
+        });
+    });
+
+</script>
+
+</body>
+</html>
