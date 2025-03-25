@@ -1,0 +1,46 @@
+<button id="fetchHistory" class="btn waves-effect waves-light green w-100">View History</button>
+
+<div id="historySection" style="display: none;">
+    <h5 class="center-align grey-text text-darken-2">Match History</h5>
+    <table class="highlight">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Original 1</th>
+                <th>Original 2</th>
+                <th>Match Percentage</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody id="historyTable"></tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#fetchHistory').click(function() {
+            $.ajax({
+                url: '/history',
+                type: 'GET',
+                success: function(response) {
+                    $('#historySection').show();
+                    $('#historyTable').empty();
+                    response.forEach(function(match) {
+                        $('#historyTable').append(`
+                            <tr>
+                                <td>${match.id}</td>
+                                <td><img src="${match.original1}" width="50"></td>
+                                <td><img src="${match.original2}" width="50"></td>
+                                <td>${match.match_percentage}</td>
+                                <td>${match.timestamp}</td>
+                            </tr>
+                        `);
+                    });
+                },
+                error: function() {
+                    M.toast({html: 'Failed to load history', classes: 'red'});
+                }
+            });
+        });
+    });
+</script>
